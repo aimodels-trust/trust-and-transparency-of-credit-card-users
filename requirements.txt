@@ -1,8 +1,8 @@
 streamlit
 pandas
-joblib
-gdown
 numpy
+scikit-learn
 shap
 matplotlib
-scikit-learn
+joblib
+gdown
