@@ -12,10 +12,13 @@ model_url = "https://drive.google.com/uc?id=1en2IPj_z6OivZCBNDXepX-EAiZLvCILE"
 model_path = "credit_default_model.pkl"
 
 if not os.path.exists(model_path):
+    print("Downloading model from Google Drive...")
     gdown.download(model_url, model_path, quiet=False)
 
 # Load the trained model
-model = joblib.load(model_path)
+pipeline = joblib.load(model_path)
+model = pipeline.named_steps["classifier"]  # Extract the classifier from the pipeline
+preprocessor = pipeline.named_steps["preprocessor"]
 
 # Streamlit app
 st.title("Credit Card Default Prediction with Explainability")
