@@ -9,15 +9,16 @@ import matplotlib.pyplot as plt
 
 # Step 1: Download the model from Google Drive
 model_url = "https://drive.google.com/uc?id=1en2IPj_z6OivZCBNDXepX-EAiZLvCILE"
-model_path = "credit_default_model.pkl"
+model_path = "credit_default_model_fixed.pkl"
 
 # Check if the model file already exists; if not, download it
 if not os.path.exists(model_path):
     print("Downloading model from Google Drive...")
     gdown.download(model_url, model_path, quiet=False)
 
-# Step 2: Load the trained model
+# Step 2: Load the trained model using old scikit-learn and re-save with updated version
 model = joblib.load(model_path)
+joblib.dump(model, model_path)
 
 # Step 3: Define the app
 st.title("Credit Card Default Prediction with Explainability")
