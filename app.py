@@ -17,8 +17,15 @@ if not os.path.exists(model_path):
 
 # Load the trained model
 pipeline = joblib.load(model_path)
-model = pipeline.named_steps["classifier"]  # Extract the classifier from the pipeline
-preprocessor = pipeline.named_steps["preprocessor"]
+
+# Check if the model is a Pipeline
+if isinstance(pipeline, Pipeline):
+    preprocessor = pipeline.named_steps.get('preprocessor', None)
+    model = pipeline.named_steps['classifier']
+else:
+    # If not a Pipeline, assume the model is a standalone estimator
+    preprocessor = None
+    model = pipeline
 
 # Streamlit app
 st.title("Credit Card Default Prediction with Explainability")
@@ -45,7 +52,24 @@ st.write("## Batch Upload (CSV)")
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    df = df[expected_columns]  # Ensure only required columns are used
+    
+    # Ensure only required columns are used
+    missing_cols = [col for col in expected_columns if col not in df.columns]
+    if missing_cols:
+        st.error(f"Missing columns in the uploaded file: {missing_cols}")
+        st.stop()
+    
+    # Add missing columns with default values
+    for col in expected_columns:
+        if col not in df.columns:
+            df[col] = 0  # Default value for numeric columns
+    
+    # Reorder columns to match the expected order
+    df = df[expected_columns]
+    
+    # Preprocess the data if necessary
+    if preprocessor:
+        df = preprocessor.transform(df)
     
     # Predictions
     predictions = model.predict(df)
