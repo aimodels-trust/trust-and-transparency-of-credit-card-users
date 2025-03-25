@@ -115,13 +115,13 @@ if app_mode == "🏠 Home":
 
         st.write("### Individual Prediction Explanation")
         fig, ax = plt.subplots()
-        shap.waterfall_plot(shap.Explanation(values=shap_values[0], base_values=explainer.expected_value[1], data=user_data.iloc[0]), max_display=10, show=False)
+        shap.waterfall_plot(shap.Explanation(values=shap_values[0], base_values=explainer.expected_value[1], feature_names=expected_columns, data=user_data.iloc[0].values), max_display=10, show=False)
         st.pyplot(fig)
 
 elif app_mode == "📊 Feature Importance":
-    st.write("### 🔍 Feature Importance & Explainability")
+    st.write("### 🔍 Batch Predictions & Feature Importance")
 
-    uploaded_file = st.file_uploader("📂 Upload CSV for SHAP Analysis", type=["csv"])
+    uploaded_file = st.file_uploader("📂 Upload CSV for Batch Predictions", type=["csv"])
 
     if uploaded_file:
         df = pd.read_csv(uploaded_file)
@@ -162,11 +162,21 @@ elif app_mode == "📊 Feature Importance":
         st.write("### Top 10 Most Important Features")
         st.dataframe(top_features)
 
+        # Make batch predictions
+        predictions = model.predict(df)
+        probabilities = model.predict_proba(df)[:, 1]
+        df['Default_Risk'] = predictions
+        df['Probability'] = probabilities
+
+        st.write("### Batch Prediction Results")
+        st.dataframe(df[['LIMIT_BAL', 'AGE', 'SEX', 'EDUCATION', 'MARRIAGE', 'Default_Risk', 'Probability']])
+        st.download_button("Download Predictions", df.to_csv(index=False), file_name="predictions.csv", mime="text/csv")
+
         # Select a specific row for local explanations
         index = st.number_input("Select a row index for individual explanation", min_value=0, max_value=len(df)-1, value=0)
         st.write("### Individual Prediction Explanation")
 
         # Waterfall Plot
         fig, ax = plt.subplots()
-        shap.waterfall_plot(shap.Explanation(values=shap_values[index], base_values=explainer.expected_value[1], data=df.iloc[index]), max_display=10, show=False)
+        shap.waterfall_plot(shap.Explanation(values=shap_values[index], base_values=explainer.expected_value[1], feature_names=expected_columns, data=df.iloc[index].values), max_display=10, show=False)
         st.pyplot(fig)
