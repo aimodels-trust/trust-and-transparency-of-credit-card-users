@@ -31,9 +31,10 @@ else:
 # Streamlit app
 st.title("Credit Card Default Prediction with Explainability")
 
+# Define expected columns (based on training data)
 expected_columns = [
     'LIMIT_BAL', 'SEX', 'EDUCATION', 'MARRIAGE', 'AGE',
-    'PAY_0', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6',
+    'PAY_1', 'PAY_2', 'PAY_3', 'PAY_4', 'PAY_5', 'PAY_6',
     'BILL_AMT1', 'BILL_AMT2', 'BILL_AMT3', 'BILL_AMT4', 'BILL_AMT5', 'BILL_AMT6',
     'PAY_AMT1', 'PAY_AMT2', 'PAY_AMT3', 'PAY_AMT4', 'PAY_AMT5', 'PAY_AMT6'
 ]
@@ -45,7 +46,7 @@ st.write("- **LIMIT_BAL**: Amount of given credit (includes individual and famil
          "- **EDUCATION**: (1 = Graduate School, 2 = University, 3 = High School, 4 = Others)\n"
          "- **MARRIAGE**: Marital status (1 = Married, 2 = Single, 3 = Others)\n"
          "- **AGE**: Age of the individual\n"
-         "- **PAY_0 to PAY_6**: Past payment records (-1 = Pay duly, 1-9 = Months delayed)\n"
+         "- **PAY_1 to PAY_6**: Past payment records (-1 = Pay duly, 1-9 = Months delayed)\n"
          "- **BILL_AMT1 to BILL_AMT6**: Amount of bill statement (April to September 2005)\n"
          "- **PAY_AMT1 to PAY_AMT6**: Amount of previous payments (April to September 2005)")
 
@@ -53,7 +54,24 @@ st.write("## Batch Upload (CSV)")
 uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    df = df[expected_columns]  # Ensure only required columns are used
+    
+    # Rename PAY_0 to PAY_1 if necessary
+    if 'PAY_0' in df.columns:
+        df.rename(columns={'PAY_0': 'PAY_1'}, inplace=True)
+    
+    # Ensure all expected columns are present
+    missing_cols = [col for col in expected_columns if col not in df.columns]
+    if missing_cols:
+        st.error(f"Missing columns in the uploaded file: {missing_cols}")
+        st.stop()
+    
+    # Add missing columns with default values
+    for col in expected_columns:
+        if col not in df.columns:
+            df[col] = 0  # Default value for numeric columns
+    
+    # Reorder columns to match the expected order
+    df = df[expected_columns]
     
     # Preprocess the data if necessary
     if preprocessor:
