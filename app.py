@@ -107,11 +107,15 @@ if app_mode == "🏠 Home":
 
         # Local SHAP Explanation
         explainer = shap.Explainer(model)
-        shap_values = explainer(user_data)
+        shap_values = explainer.shap_values(user_data)
+
+        # Ensure correct shape for SHAP values
+        if isinstance(shap_values, list):  # For binary classification
+            shap_values = shap_values[1]  # Use SHAP values for the positive class
 
         st.write("### Individual Prediction Explanation")
         fig, ax = plt.subplots()
-        shap.waterfall_plot(shap_values[0], max_display=10, show=False)
+        shap.waterfall_plot(shap.Explanation(values=shap_values[0], base_values=explainer.expected_value[1], data=user_data.iloc[0]), max_display=10, show=False)
         st.pyplot(fig)
 
 elif app_mode == "📊 Feature Importance":
@@ -142,13 +146,21 @@ elif app_mode == "📊 Feature Importance":
 
         # Compute SHAP values
         explainer = shap.Explainer(model)
-        shap_values = explainer(df)
+        shap_values = explainer.shap_values(df)
 
-        # Global Feature Importance
-        st.write("### Global Feature Importance")
-        fig, ax = plt.subplots()
-        shap.summary_plot(shap_values, df, max_display=10, show=False)
-        st.pyplot(fig)
+        # Ensure correct shape for SHAP values
+        if isinstance(shap_values, list):  # For binary classification
+            shap_values = shap_values[1]  # Use SHAP values for the positive class
+
+        # Calculate feature importance
+        feature_importance = np.abs(shap_values).mean(axis=0)
+        top_features = pd.DataFrame({
+            'Feature': expected_columns,
+            'Importance': feature_importance
+        }).sort_values(by="Importance", ascending=False).head(10)
+
+        st.write("### Top 10 Most Important Features")
+        st.dataframe(top_features)
 
         # Select a specific row for local explanations
         index = st.number_input("Select a row index for individual explanation", min_value=0, max_value=len(df)-1, value=0)
@@ -156,5 +168,5 @@ elif app_mode == "📊 Feature Importance":
 
         # Waterfall Plot
         fig, ax = plt.subplots()
-        shap.waterfall_plot(shap_values[index], max_display=10, show=False)
+        shap.waterfall_plot(shap.Explanation(values=shap_values[index], base_values=explainer.expected_value[1], data=df.iloc[index]), max_display=10, show=False)
         st.pyplot(fig)
