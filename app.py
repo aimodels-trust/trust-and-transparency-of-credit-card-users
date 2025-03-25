@@ -111,7 +111,7 @@ elif app_mode == "📊 Feature Importance":
         if isinstance(shap_values, list):
             shap_values = shap_values[1]
         
-        feature_importance = np.abs(shap_values).mean(axis=0)
+        feature_importance = np.abs(shap_values).mean(axis=0).flatten()
         top_features = pd.DataFrame({'Feature': expected_columns, 'Importance': feature_importance})
         top_features = top_features.sort_values(by="Importance", ascending=False).head(10)
 
