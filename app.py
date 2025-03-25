@@ -84,7 +84,7 @@ elif app_mode == "📂 Batch Prediction":
         
         predictions = model.predict(df)
         probabilities = model.predict_proba(df)[:, 1]
-        df["Risk Level"] = ["High Risk" if p == 1 else "Low Risk" for p in predictions]
+        df["Prediction"] = predictions  # 1 for High Risk, 0 for Low Risk
         df["Probability of Default"] = probabilities
         st.write(df)
         
