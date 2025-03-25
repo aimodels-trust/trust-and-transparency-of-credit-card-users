@@ -62,9 +62,10 @@ if app_mode == "🏠 Home":
         
         prediction = model.predict(user_data)[0]
         probability = model.predict_proba(user_data)[0][1]
+        risk_level = "High Risk" if prediction == 1 else "Low Risk"
 
-        st.write(f"### Prediction: {'Default' if prediction == 1 else 'No Default'}")
-        st.write(f"### Probability: {probability:.2f}")
+        st.write(f"### Prediction: {risk_level}")
+        st.write(f"### Probability of Default: {probability:.2f}")
 
 elif app_mode == "📂 Batch Prediction":
     st.write("### Upload CSV for Batch Prediction")
@@ -83,8 +84,8 @@ elif app_mode == "📂 Batch Prediction":
         
         predictions = model.predict(df)
         probabilities = model.predict_proba(df)[:, 1]
-        df["Prediction"] = ["Default" if p == 1 else "No Default" for p in predictions]
-        df["Probability"] = probabilities
+        df["Risk Level"] = ["High Risk" if p == 1 else "Low Risk" for p in predictions]
+        df["Probability of Default"] = probabilities
         st.write(df)
         
         csv = df.to_csv(index=False).encode('utf-8')
